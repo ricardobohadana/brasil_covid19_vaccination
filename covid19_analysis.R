@@ -7,8 +7,8 @@ library(readr)
 library(mgcv)
 library(kaggler)
 
-kag_api <- 'kaggle datasets download -d gpreda/covid-world-vaccination-progress'
 
+### Downloading updated data from kaggle ####
 # make sure your kaggle.json file is on your project directory
 kgl_auth(creds_file = 'kaggle.json')
 
@@ -22,6 +22,8 @@ unzip_result <- unzip("vaccinations.zip", exdir = getwd(), overwrite = TRUE)
 
 csv_filename = "country_vaccinations.csv"
 
+
+### Reading and cleaning data ####
 vaccinations <- read.csv(csv_filename, header = TRUE)
 
 vaccinations <- vaccinations %>%
@@ -36,7 +38,7 @@ vaccinations_BRA <- vaccinations %>%
   ) %>%
   mutate(days = row_number());
 
-### REGRESSÃO ###
+### Regression #######
 formula <- gam(data = vaccinations_BRA ,people_vaccinated_per_hundred~s(days, bs="cs"))
 model.stats <- tidy(formula, parametric = TRUE)
 
@@ -52,13 +54,13 @@ last_vaccination <- max(vaccinations_BRA$days)
 end_vaccinations <- full_vaccination - max(vaccinations_BRA$days) 
 
 
-### GRÁFICO 1 ###
+### PLOT #1 ####
 ggplot(vaccinations_BRA, aes(x = date, y = daily_vaccinations, colour = iso_code)) +
   geom_col() +
   scale_y_continuous(name="Vacinações Diárias", labels= scales::comma) +
   labs(title="Quantidade de vacinas aplicadas por dia no Brasil")
 
-### GRÁFICO 2 ###
+### PLOT #2 ####
 ggplot(vaccinations_BRA, aes(x = days,y = people_vaccinated_per_hundred)) +
   geom_col() +
   stat_smooth(method = "gam", se = TRUE, fullrange = TRUE) +
@@ -69,7 +71,7 @@ ggplot(vaccinations_BRA, aes(x = days,y = people_vaccinated_per_hundred)) +
   annotate('text', x = 150, y = 100, label = paste("Dias faltando para fim da vacinação (1ª dose): ", end_vaccinations, '+/-', round(model.stats$estimate)))
   
 
-### GRÁFICO 3###
+### PLOT #3 ####
 # ggplot(vaccinations_BRA, aes(x = days,y = people_vaccinated_per_hundred)) +
 #   geom_point() +
 #   annotate("point", x=full_vaccination, y=100) +
